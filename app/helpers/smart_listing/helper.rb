@@ -129,7 +129,7 @@ module SmartListing
         else
           locals.merge!({:smart_listing => self})
         end
-
+        p "LOCALS: #{locals.inspect}"
         @template.render options, locals, &block
       end
 
@@ -310,6 +310,7 @@ module SmartListing
       options = args.extract_options!
       name = (args[0] || options[:name] || controller_name).to_sym
       smart_listing = @smart_listings[name]
+      p "SL: #{smart_listing.inspect}"
 
       # don't update list if params are missing (prevents interfering with other lists)
       if params.keys.select{|k| k.include?("smart_listing")}.present? && !params[smart_listing.base_param]

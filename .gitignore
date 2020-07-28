@@ -31,4 +31,9 @@ spec/dummy/log/*.log
 spec/dummy/tmp/
 tags
 
+.idea
+.rakeTasks
+
 .byebug_history
+.rubocop.yml
+.rubocop*

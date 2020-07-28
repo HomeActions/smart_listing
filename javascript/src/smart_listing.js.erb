@@ -1,0 +1,333 @@
+
+export default function SmartListing() {
+    let Config;
+
+    Config = (function() {
+        function Config() {}
+        Config.options = <%= this.config.dump_json %>;
+        Config.merge = function(d) {
+            return $.extend(true, this.options, d || $("body").data("smart-listing-config"));
+        };
+        Config["class"] = function(name) {
+            return this.options["constants"]["classes"][name];
+        };
+        Config.class_name = function(name) {
+            return "." + (this["class"](name));
+        };
+        Config.data_attribute = function(name) {
+            return this.options["constants"]["data_attributes"][name];
+        };
+        Config.selector = function(name) {
+            return this.options["constants"]["selectors"][name];
+        };
+
+        Config.element_template = function(name) {
+            return this.options["constants"]["element_templates"][name];
+        };
+        Config.bootstrap_commands = function(name) {
+            return this.options["constants"]["bootstrap_commands"][name];
+        };
+        return Config;
+    })();
+
+    this.config = Config;
+
+    function SmartListing(e) {
+        this.update_list = bind(this.update_list, this);
+        this.remove = bind(this.remove, this);
+        this.destroy = bind(this.destroy, this);
+        this.update = bind(this.update, this);
+        this.edit = bind(this.edit, this);
+        this.create = bind(this.create, this);
+        this.new_item = bind(this.new_item, this);
+        this.editable = bind(this.editable, this);
+        this.registerPopover = bind(this.registerPopover, this);
+        this.params = bind(this.params, this);
+        this.reload = bind(this.reload, this);
+        this.refresh = bind(this.refresh, this);
+        this.cancelEdit = bind(this.cancelEdit, this);
+        this.changeItemCount = bind(this.changeItemCount, this);
+        this.setAutoshow = bind(this.setAutoshow, this);
+        this.maxCount = bind(this.maxCount, this);
+        this.itemCount = bind(this.itemCount, this);
+        this.fadeLoaded = bind(this.fadeLoaded, this);
+        this.fadeLoading = bind(this.fadeLoading, this);
+        this.container = e;
+        this.name = this.container.attr("id");
+        this.loading = this.container.find(this.config.class_name("loading"));
+        this.content = this.container.find(this.config.class_name("content"));
+        this.status = $((this.config.class_name("status")) + " [data-" + (this.config.data_attribute("main")) + "='" + this.name + "']");
+        this.confirmed = null;
+        this.popovers = {};
+        this.container.on("ajax:before", (this.config.class_name("item_actions")) + ", " + (this.config.class_name("pagination_container")), (function(_this) {
+            return function(e) {
+                return _this.fadeLoading();
+            };
+        })(this));
+        this.container.on("ajax:success", (function(_this) {
+            return function(e) {
+                let editable;
+                if ($(e.target).is((this.config.class_name("item_actions")) + " " + (this.config.selector("item_action_destroy")))) {
+                    editable = $(e.target).closest(this.config.class_name("editable"));
+                    if (_this.container.find(this.config.class_name("editable")).length === 1) {
+                        _this.reload();
+                        return false;
+                    } else {
+                        editable.remove();
+                        _this.container.trigger("smart_listing:destroy", editable);
+                    }
+                    _this.changeItemCount(-1);
+                    _this.refresh();
+                    _this.fadeLoaded();
+                    return false;
+                }
+            };
+        })(this));
+        this.container.on("click", this.config.selector("edit_cancel"), (function(_this) {
+            return function(event) {
+                let editable;
+                editable = $(event.currentTarget).closest(this.config.class_name("editable"));
+                if (editable.length > 0) {
+                    _this.cancelEdit(editable);
+                } else {
+                    _this.container.find(this.config.class_name("new_item_placeholder")).addClass(this.config["class"]("hidden"));
+                    _this.container.find(this.config.class_name("new_item_action")).removeClass(this.config["class"]("hidden"));
+                }
+                _this.setAutoshow(false);
+                return false;
+            };
+        })(this));
+        this.container.on("click", (this.config.class_name("item_actions")) + " a[data-" + (this.config.data_attribute("confirmation")) + "]", (function(_this) {
+            return function(event) {
+                return $.fn.smart_listing.confirm($(event.currentTarget), $(event.currentTarget).data(this.config.data_attribute("confirmation")));
+            };
+        })(this));
+        this.container.on("click", (this.config.class_name("item_actions")) + " a[data-" + (this.config.data_attribute("popover")) + "]", (function(_this) {
+            return function(event) {
+                let name;
+                name = $(event.currentTarget).data(this.config.data_attribute("popover"));
+                if (jQuery.isFunction(_this.popovers[name])) {
+                    _this.popovers[name]($(event.currentTarget));
+                    return false;
+                }
+            };
+        })(this));
+        this.container.on("click", "input[type=text]" + (this.config.class_name("autoselect")), function(event) {
+            return $(this).select();
+        });
+        this.container.on("change", this.config.class_name("callback"), (function(_this) {
+            return function(event) {
+                let checkbox, data, id;
+                checkbox = $(event.currentTarget);
+                id = checkbox.closest(this.config.selector("row")).data(this.config.data_attribute("id"));
+                data = {};
+                data[checkbox.val()] = checkbox.is(":checked");
+                return $.ajax({
+                    beforeSend: function(xhr, settings) {
+                        return xhr.setRequestHeader("accept", "*/*;q=0.5, " + settings.accepts.script);
+                    },
+                    url: _this.container.data(this.config.data_attribute("callback_href")),
+                    type: "POST",
+                    data: data
+                });
+            };
+        })(this));
+    }
+
+    this.prototype.fadeLoading = function() {
+        return $.fn.smart_listing.onLoading(this.content, this.loading);
+    };
+
+    this.prototype.fadeLoaded = function() {
+        return $.fn.smart_listing.onLoaded(this.content, this.loading);
+    };
+
+    this.prototype.itemCount = function() {
+        return parseInt(this.container.data(this.config.data_attribute("item_count")));
+    };
+
+    this.prototype.maxCount = function() {
+        return parseInt(this.container.data(this.config.data_attribute("max_count")));
+    };
+
+    this.prototype.setAutoshow = function(v) {
+        return this.container.data(this.config.data_attribute("autoshow"), v);
+    };
+
+    this.prototype.changeItemCount = function(value) {
+        let count;
+        count = this.container.data(this.config.data_attribute("item_count")) + value;
+        this.container.data(this.config.data_attribute("item_count"), count);
+        return this.container.find(this.config.selector("pagination_count")).html(count);
+    };
+
+    this.prototype.cancelEdit = function(editable) {
+        if (editable.data(this.config.data_attribute("inline_edit_backup"))) {
+            editable.html(editable.data(this.config.data_attribute("inline_edit_backup")));
+            editable.removeClass(this.config["class"]("inline_editing"));
+            return editable.removeData(this.config.data_attribute("inline_edit_backup"));
+        }
+    };
+
+    this.prototype.refresh = function() {
+        let footer, header, no_records;
+        header = this.content.find(this.config.selector("head"));
+        footer = this.content.find(this.config.class_name("pagination_per_page"));
+        no_records = this.content.find(this.config.class_name("no_records"));
+        if (this.itemCount() === 0) {
+            header.hide();
+            footer.hide();
+            no_records.show();
+        } else {
+            header.show();
+            footer.show();
+            no_records.hide();
+        }
+        if (this.maxCount()) {
+            if (this.itemCount() >= this.maxCount()) {
+                this.container.find(this.config.class_name("new_item_placeholder")).addClass(this.config["class"]("hidden"));
+                this.container.find(this.config.class_name("new_item_action")).addClass(this.config["class"]("hidden"));
+            } else {
+                if (this.container.data(this.config.data_attribute("autoshow"))) {
+                    this.container.find(this.config.class_name("new_item_placeholder")).removeClass(this.config["class"]("hidden"));
+                    this.container.find(this.config.class_name("new_item_action")).addClass(this.config["class"]("hidden"));
+                } else {
+                    this.container.find(this.config.class_name("new_item_placeholder")).addClass(this.config["class"]("hidden"));
+                    this.container.find(this.config.class_name("new_item_action")).removeClass(this.config["class"]("hidden"));
+                }
+            }
+        }
+        return this.status.each((function(_this) {
+            return function(index, status) {
+                $(status).find(this.config.class_name("limit")).html(_this.maxCount() - _this.itemCount());
+                if (_this.maxCount() - _this.itemCount() === 0) {
+                    return $(status).find(this.config.class_name("limit_alert")).show();
+                } else {
+                    return $(status).find(this.config.class_name("limit_alert")).hide();
+                }
+            };
+        })(this));
+    };
+
+    this.prototype.reload = function() {
+        return Rails.handleRemote(this.container);
+    };
+
+    this.prototype.params = function(value) {
+        if (value) {
+            return this.container.data(this.config.data_attribute("params"), value);
+        } else {
+            return this.container.data(this.config.data_attribute("params"));
+        }
+    };
+
+    this.prototype.registerPopover = function(name, callback) {
+        return this.popovers[name] = callback;
+    };
+
+    this.prototype.editable = function(id) {
+        return this.container.find((this.config.class_name("editable")) + "[data-" + (this.config.data_attribute("id")) + "=" + id + "]");
+    };
+
+    this.prototype.new_item = function(content) {
+        let new_item_action, new_item_placeholder;
+        if (!this.maxCount() || (this.itemCount() < this.maxCount())) {
+            new_item_action = this.container.find(this.config.class_name("new_item_action"));
+            new_item_placeholder = this.container.find(this.config.class_name("new_item_placeholder")).addClass(this.config["class"]("hidden"));
+            this.container.find(this.config.class_name("editable")).each((function(_this) {
+                return function(i, v) {
+                    return _this.cancelEdit($(v));
+                };
+            })(this));
+            new_item_action.addClass(this.config["class"]("hidden"));
+            new_item_placeholder.removeClass(this.config["class"]("hidden"));
+            new_item_placeholder.html(content);
+            new_item_placeholder.addClass(this.config["class"]("inline_editing"));
+            this.container.trigger("smart_listing:new", new_item_placeholder);
+            return this.fadeLoaded();
+        }
+    };
+
+    this.prototype.create = function(id, success, content) {
+        let new_item, new_item_action, new_item_placeholder;
+        new_item_action = this.container.find(this.config.class_name("new_item_action"));
+        new_item_placeholder = this.container.find(this.config.class_name("new_item_placeholder"));
+        if (success) {
+            new_item_placeholder.addClass(this.config["class"]("hidden"));
+            new_item_action.removeClass(this.config["class"]("hidden"));
+            new_item = $(this.config.element_template("row")).addClass(this.config["class"]("editable"));
+            new_item.attr("data-" + (this.config.data_attribute("id")), id);
+            new_item.html(content);
+            if (new_item_placeholder.length !== 0) {
+                if (new_item_placeholder.data("insert-mode") === "after") {
+                    new_item_placeholder.after(new_item);
+                } else {
+                    new_item_placeholder.before(new_item);
+                }
+            } else {
+                this.content.append(new_item);
+            }
+            this.container.trigger("smart_listing:create:success", new_item);
+            this.changeItemCount(1);
+            this.refresh();
+        } else {
+            new_item_placeholder.html(content);
+            this.container.trigger("smart_listing:create:fail", new_item_placeholder);
+        }
+        return this.fadeLoaded();
+    };
+
+    this.prototype.edit = function(id, content) {
+        let editable;
+        this.container.find(this.config.class_name("editable")).each((function(_this) {
+            return function(i, v) {
+                return _this.cancelEdit($(v));
+            };
+        })(this));
+        this.container.find(this.config.class_name("new_item_placeholder")).addClass(this.config["class"]("hidden"));
+        this.container.find(this.config.class_name("new_item_action")).removeClass(this.config["class"]("hidden"));
+        editable = this.editable(id);
+        editable.data(this.config.data_attribute("inline_edit_backup"), editable.html());
+        editable.html(content);
+        editable.addClass(this.config["class"]("inline_editing"));
+        this.container.trigger("smart_listing:edit", editable);
+        return this.fadeLoaded();
+    };
+
+    this.prototype.update = function(id, success, content) {
+        let editable;
+        editable = this.editable(id);
+        if (success) {
+            editable.removeClass(this.config["class"]("inline_editing"));
+            editable.removeData(this.config.data_attribute("inline_edit_backup"));
+            editable.html(content);
+            this.container.trigger("smart_listing:update:success", editable);
+            this.refresh();
+        } else {
+            editable.html(content);
+            this.container.trigger("smart_listing:update:fail", editable);
+        }
+        return this.fadeLoaded();
+    };
+
+    this.prototype.destroy = function(id, destroyed) {};
+
+    this.prototype.remove = function(id) {
+        let editable;
+        editable = this.editable(id);
+        editable.remove();
+        return this.container.trigger("smart_listing:remove", editable);
+    };
+
+    this.prototype.update_list = function(content, data) {
+        this.container.data(this.config.data_attribute("params"), $.extend(this.container.data(this.config.data_attribute("params")), data[this.config.data_attribute("params")]));
+        this.container.data(this.config.data_attribute("max_count"), data[this.config.data_attribute("max_count")]);
+        this.container.data(this.config.data_attribute("item_count"), data[this.config.data_attribute("item_count")]);
+        this.content.html(content);
+        this.refresh();
+        this.fadeLoaded();
+        return this.container.trigger("smart_listing:update_list", this.container);
+    };
+
+    return SmartListing;
+};
