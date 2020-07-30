@@ -7,7 +7,7 @@ require 'smart_listing/version'
 Gem::Specification.new do |s|
   s.name        = 'smart_listing'
   s.version     = SmartListing::VERSION
-  s.authors     = ['HomeActions']
+  s.authors     = %w[HomeActions]
   s.email       = ['webmaster@homeactions.net']
   s.homepage    = 'https://github.com/HomeActions/smart_listing'
   s.description = 'Rails data listing gem with built-in sorting, filtering and in-place editing.'
@@ -16,11 +16,9 @@ Gem::Specification.new do |s|
 
   s.files = Dir['{app,config,db,lib}/**/*', 'LICENSE', 'Rakefile', 'README.md']
 
-  s.add_dependency 'coffee-rails'
   s.add_dependency 'pagy', '>=3.8.3'
   s.add_dependency 'rails', '>=5.2'
 
-  s.add_development_dependency 'bootstrap-sass'
   s.add_development_dependency 'byebug'
   s.add_development_dependency 'guard-rspec'
   s.add_development_dependency 'rspec-rails'

@@ -15,11 +15,12 @@ Rails.href = function(element) {
 
 HTMLElement.prototype.smart_listing = function() {
     let map;
-    map = $(this).map(function() {
-        if (!$(this).data(SmartListing.config.data_attribute("main"))) {
-            $(this).data(SmartListing.config.data_attribute("main"), new SmartListing($(this)));
+    let ary = [];
+    map = ary.map(function() {
+        if (!this.getAttribute("data-" + SmartListing.config.data_attribute("main"))) {
+            this.setAttribute("data-" + SmartListing.config.data_attribute("main"), new SmartListing(this));
         }
-        return $(this).data(SmartListing.config.data_attribute("main"));
+        return this.getAttribute(SmartListing.config.data_attribute("main"));
     });
     if (map.length === 1) {
         return map[0];
