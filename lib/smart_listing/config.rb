@@ -3,13 +3,13 @@
 module SmartListing
   mattr_reader :configs
 
-  def self.configure(profile = nil)
+  def self.configure(profile=nil)
     profile ||= :default
     @@configs ||= {}
     yield @@configs[profile] ||= SmartListing::Configuration.new
   end
 
-  def self.config(profile = nil)
+  def self.config(profile=nil)
     profile ||= :default
     @@configs ||= {}
     @@configs[profile] ||= SmartListing::Configuration.new
@@ -117,8 +117,8 @@ module SmartListing
       @options[sym] = *args
     end
 
-    def constants(key, value = nil)
-      if value && !value.empty?
+    def constants(key, value=nil)
+      if value.present?
         @options[:constants] ||= {}
         @options[:constants][key] ||= {}
         @options[:constants][key].merge!(value)
@@ -142,8 +142,8 @@ module SmartListing
       @options[:constants].try(:[], :element_templates).try(:[], key) || DEFAULTS[:constants][:element_templates][key]
     end
 
-    def global_options(value = nil)
-      if value && !value.empty?
+    def global_options(value=nil)
+      if value.present?
         @options[:global_options] ||= {}
         @options[:global_options].merge!(value)
       end
