@@ -2,7 +2,8 @@
 
 require 'smart_listing/config'
 require 'smart_listing/engine'
-require 'pagy'
+require 'kaminari'
+# require 'pagy'
 
 # Fix parsing nested params
 module Kaminari
@@ -28,10 +29,10 @@ module SmartListing
     UNSAFE_PARAMS = %i[authenticity_token commit utf8 _method script_name].freeze
     # For fast-check, like:
     #   puts variable if ALLOWED_DIRECTIONS[variable]
-    ALLOWED_DIRECTIONS = Hash[['asc', 'desc', ''].map { |d| [d, true] }].freeze
+    ALLOWED_DIRECTIONS = ['asc', 'desc', ''].index_with { |_d| true }.freeze
     private_constant :ALLOWED_DIRECTIONS
 
-    def initialize(name, collection, options = {})
+    def initialize(name, collection, options={})
       @name = name
 
       config_profile = options.delete(:config_profile)
@@ -59,10 +60,12 @@ module SmartListing
       @params.except!(*UNSAFE_PARAMS)
 
       @page = get_param :page
-      @per_page = !get_param(:per_page) || get_param(:per_page).empty? ? (@options[:memorize_per_page] && get_param(:per_page, cookies).to_i > 0 ? get_param(:per_page, cookies).to_i : page_sizes.first) : get_param(:per_page).to_i
-      unless page_sizes.include?(@per_page) || (unlimited_per_page? && @per_page == 0)
-        @per_page = page_sizes.first
-      end
+      @per_page = if get_param(:per_page).blank?
+                    @options[:memorize_per_page] && get_param(:per_page, cookies).to_i.zero? ? get_param(:per_page, cookies).to_i : page_sizes.first
+                  else
+                    get_param(:per_page).to_i
+                  end
+      @per_page = page_sizes.first unless page_sizes.include?(@per_page) || (unlimited_per_page? && @per_page.zero?)
 
       @sort = parse_sort(get_param(:sort)) || @options[:default_sort]
       sort_keys = (@options[:sort_attributes] == :implicit ? @sort.keys.collect { |s| [s, s] } : @options[:sort_attributes])
@@ -73,13 +76,13 @@ module SmartListing
       @count = @count.length if @count.is_a?(Hash)
 
       # Reset @page if greater than total number of pages
-      if @per_page > 0
+      if @per_page.positive?
         no_pages = (@count.to_f / @per_page.to_f).ceil.to_i
         @page = no_pages if @page.to_i > no_pages
       end
 
       if @options[:array]
-        if @sort && !@sort.empty? # when array we sort only by first attribute
+        if @sort.present? # when array we sort only by first attribute
           i = sort_keys.index { |x| x[0] == @sort.to_h.first[0] }
           @collection = @collection.sort do |x, y|
             xval = x
@@ -104,24 +107,18 @@ module SmartListing
         end
         if @options[:paginate] && @per_page > 0
           @collection = ::Kaminari.paginate_array(@collection).page(@page).per(@per_page)
-          if @collection.empty?
-            @collection = @collection.page(@collection.total_pages)
-          end
+          @collection = @collection.page(@collection.total_pages) if @collection.empty?
         end
       else
         # let's sort by all attributes
         #
-        if @sort && !@sort.empty?
+        if @sort.present?
           @collection = @collection.order(sort_keys.collect do |s|
-                                            if @sort[s[0]]
-                                              "#{s[1]} #{@sort[s[0]]}"
-                                                                end
+                                            "#{s[1]} #{@sort[s[0]]}" if @sort[s[0]]
                                           end .compact)
         end
 
-        if @options[:paginate] && @per_page > 0
-          @collection = @collection.page(@page).per(@per_page)
-        end
+        @collection = @collection.page(@page).per(@per_page) if @options[:paginate] && @per_page > 0
       end
     end
 
@@ -169,7 +166,7 @@ module SmartListing
       @options[:sort_dirs]
     end
 
-    def all_params(overrides = {})
+    def all_params(overrides={})
       ap = { base_param => {} }
       @options[:param_names].each do |k, v|
         ap[base_param][v] = (overrides[k] || send(k))
@@ -187,7 +184,7 @@ module SmartListing
 
     private
 
-    def get_param(key, store = @params)
+    def get_param(key, store=@params)
       if store.is_a?(ActionDispatch::Cookies::CookieJar)
         store["#{base_param}_#{param_names[key]}"]
       else
@@ -195,7 +192,7 @@ module SmartListing
       end
     end
 
-    def set_param(key, value, store = @params)
+    def set_param(key, value, store=@params)
       if store.is_a?(ActionDispatch::Cookies::CookieJar)
         store["#{base_param}_#{param_names[key]}"] = value
       else
@@ -211,9 +208,7 @@ module SmartListing
         return sort if sort_params.blank?
 
         sort_params.map do |attr, dir|
-          if @options[:array] || @collection.klass.attribute_method?(attr)
-            key = attr.to_s
-          end
+          key = attr.to_s if @options[:array] || @collection.klass.attribute_method?(attr)
           if key && ALLOWED_DIRECTIONS[dir.to_s]
             sort ||= {}
             sort[key] = dir.to_s

@@ -16,7 +16,8 @@ Gem::Specification.new do |s|
 
   s.files = Dir['{app,config,db,lib}/**/*', 'LICENSE', 'Rakefile', 'README.md']
 
-  s.add_dependency 'pagy', '>=3.8.3'
+  # s.add_dependency 'pagy', '>=3.8.3'
+  s.add_dependency 'kaminari', '>= 0.17'
   s.add_dependency 'rails', '>=5.2'
 
   s.add_development_dependency 'byebug'
