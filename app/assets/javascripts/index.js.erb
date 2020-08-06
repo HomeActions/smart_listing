@@ -1,3 +1,5 @@
+import Rails from '@rails/ujs';
+
 let ready, bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
 if (!String.prototype.endsWith) {
@@ -9,11 +11,26 @@ if (!String.prototype.endsWith) {
     };
 }
 
+let extend = function(out) {
+    out = out || {};
+
+    for (let i = 1; i < arguments.length; i++) {
+        if (!arguments[i])
+            continue;
+
+        for (let key in arguments[i]) {
+            if (arguments[i].hasOwnProperty(key))
+                out[key] = arguments[i][key];
+        }
+    }
+    return out;
+};
+
 Rails.href = function(element) {
     return element.getAttribute("href") || element.dataset("<%= SmartListing.config.data_attributes(:href) %>") || window.location.pathname;
 };
 
-export default function SmartListing() {
+let SmartListing = function() {
     let Config;
     let opts = <%= SmartListing.config.dump_json %>
 
@@ -21,7 +38,7 @@ export default function SmartListing() {
             function Config() {}
             Config.options = opts;
             Config.merge = function(d) {
-                return $.extend(true, this.options, d || $("body").data("smart-listing-config"));
+                return extend(true, this.options, d || $("body").data("smart-listing-config"));
             };
             Config["class"] = function(name) {
                 return this.options["constants"]["classes"][name];

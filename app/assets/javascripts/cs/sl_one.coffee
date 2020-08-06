@@ -1,38 +1,3 @@
-# endsWith polyfill
-if !String::endsWith
-  String::endsWith = (search, this_len) ->
-    if this_len == undefined or this_len > @length
-      this_len = @length
-    @substring(this_len - (search.length), this_len) == search
-
-# Useful when SmartListing target url is different than current one
-$.rails.href = (element) ->
-  element.attr("href") || element.data("<%= SmartListing.config.data_attributes(:href) %>") || window.location.pathname
-
-class Config
-  @options: "<%= SmartListing.config.dump_json %>"
-
-  @merge: (d) ->
-    $.extend true, @options, d || $("body").data("smart-listing-config")
-
-  @class: (name)->
-    @options["constants"]["classes"][name]
-
-  @class_name: (name) ->
-    ".#{@class(name)}"
-
-  @data_attribute: (name)->
-    @options["constants"]["data_attributes"][name]
-
-  @selector: (name)->
-    @options["constants"]["selectors"][name]
-
-  @element_template: (name)->
-    @options["constants"]["element_templates"][name]
-
-  @bootstrap_commands: (name)->
-    @options["constants"]["bootstrap_commands"][name]
-
 class window.SmartListing
   @config: Config
 
@@ -80,7 +45,7 @@ class window.SmartListing
       false
 
     @container.on "click", "#{SmartListing.config.class_name("item_actions")} a[data-#{SmartListing.config.data_attribute("confirmation")}]", (event) =>
-      HTMLElement.prototype.smart_listing.confirm $(event.currentTarget), $(event.currentTarget).data(SmartListing.config.data_attribute("confirmation"))
+      $.fn.smart_listing.confirm $(event.currentTarget), $(event.currentTarget).data(SmartListing.config.data_attribute("confirmation"))
 
     @container.on "click", "#{SmartListing.config.class_name("item_actions")} a[data-#{SmartListing.config.data_attribute("popover")}]", (event) =>
       name = $(event.currentTarget).data(SmartListing.config.data_attribute("popover"))
@@ -106,11 +71,11 @@ class window.SmartListing
       })
 
   fadeLoading: =>
-    HTMLElement.prototype.smart_listing.onLoading(@content, @loading)
+    $.fn.smart_listing.onLoading(@content, @loading)
 
   fadeLoaded: =>
-    HTMLElement.prototype.smart_listing.onLoaded(@content, @loading)
-  
+    $.fn.smart_listing.onLoaded(@content, @loading)
+
   itemCount: =>
     parseInt(@container.data(SmartListing.config.data_attribute("item_count")))
 
@@ -131,7 +96,7 @@ class window.SmartListing
       editable.html(editable.data(SmartListing.config.data_attribute("inline_edit_backup")))
       editable.removeClass(SmartListing.config.class("inline_editing"))
       editable.removeData(SmartListing.config.data_attribute("inline_edit_backup"))
-  
+
   # Callback called when record is added/deleted using ajax request
   refresh: () =>
     header = @content.find(SmartListing.config.selector("head"))
@@ -165,11 +130,11 @@ class window.SmartListing
         $(status).find(SmartListing.config.class_name("limit_alert")).show()
       else
         $(status).find(SmartListing.config.class_name("limit_alert")).hide()
-  
+
   # Trigger AJAX request to reload the list
   reload: () =>
     $.rails.handleRemote(@container)
-  
+
   params: (value) =>
     if value
       @container.data(SmartListing.config.data_attribute("params"), value)
@@ -264,16 +229,16 @@ class window.SmartListing
       @container.trigger("smart_listing:update:fail", editable)
 
     @fadeLoaded()
-  
+
   destroy: (id, destroyed) =>
-    # No need to do anything here, already handled by ajax:success handler
+  # No need to do anything here, already handled by ajax:success handler
 
   remove: (id) =>
     editable = @editable(id)
     editable.remove()
 
     @container.trigger("smart_listing:remove", editable)
-  
+
   update_list: (content, data) =>
     @container.data(SmartListing.config.data_attribute("params"), $.extend(@container.data(SmartListing.config.data_attribute("params")), data[SmartListing.config.data_attribute("params")]))
     @container.data(SmartListing.config.data_attribute("max_count"), data[SmartListing.config.data_attribute("max_count")])
@@ -285,166 +250,3 @@ class window.SmartListing
     @fadeLoaded()
 
     @container.trigger("smart_listing:update_list", @container)
-
-HTMLElement.prototype.smart_listing = () ->
-  map = $(this).map () ->
-    if !$(this).data(SmartListing.config.data_attribute("main"))
-      $(this).data(SmartListing.config.data_attribute("main"), new SmartListing($(this)))
-    $(this).data(SmartListing.config.data_attribute("main"))
-  if map.length == 1
-    map[0]
-  else
-    map
-
-HTMLElement.prototype.smart_listing.observeField = (field, opts = {}) ->
-   key_timeout = null
-   last_value = null
-   options =
-     onFilled: () ->
-     onEmpty: () ->
-     onChange: () ->
-   options = $.extend(options, opts)
- 
-   keyChange = () ->
-     if field.val().length > 0
-       options.onFilled()
-     else
-       options.onEmpty()
-
-     if field.val() == last_value && field.val().length != 0
-       return
-     lastValue = field.val()
- 
-     options.onChange()
- 
-   field.data(SmartListing.config.data_attribute("observed"), true)
- 
-   field.bind "keydown", (e) ->
-     if(key_timeout)
-       clearTimeout(key_timeout)
- 
-     key_timeout = setTimeout(->
-       keyChange()
-     , 400)
-
-HTMLElement.prototype.smart_listing.showPopover = (elem, body) ->
-  elem.popover(SmartListing.config.bootstrap_commands("popover_destroy"))
-  elem.popover(content: body, html: true, trigger: "manual")
-  elem.popover("show")
-
-HTMLElement.prototype.smart_listing.showConfirmation = (confirmation_elem, msg, confirm_callback) ->
-  buildPopover = (confirmation_elem, msg) ->
-    deletion_popover = $("<div/>").addClass("confirmation_box")
-    deletion_popover.append($("<p/>").html(msg))
-    deletion_popover.append($("<p/>")
-      .append($("<button/>").html("Yes").addClass("btn btn-danger ").click (event) =>
-        # set @confirmed element and emulate click on icon
-        editable = $(event.currentTarget).closest(SmartListing.config.class_name("editable"))
-        confirm_callback(confirmation_elem)
-        $(confirmation_elem).click()
-        $(confirmation_elem).popover(SmartListing.config.bootstrap_commands("popover_destroy"))
-      )
-      .append(" ")
-      .append($("<button/>").html("No").addClass("btn btn-small").click (event) =>
-        editable = $(event.currentTarget).closest(SmartListing.config.class_name("editable"))
-        $(confirmation_elem).popover(SmartListing.config.bootstrap_commands("popover_destroy"))
-      )
-    )
-
-  HTMLElement.prototype.smart_listing.showPopover confirmation_elem, buildPopover(confirmation_elem, msg)
-
-HTMLElement.prototype.smart_listing.confirm = (elem, msg) ->
-  if !elem.data("confirmed")
-    # We need confirmation
-    HTMLElement.prototype.smart_listing.showConfirmation elem, msg, (confirm_elem) =>
-      confirm_elem.data("confirmed", true)
-    false
-  else
-    # Confirmed, reset flag and go ahead with deletion
-    elem.data("confirmed", false)
-    true
-
-HTMLElement.prototype.smart_listing.onLoading = (content, loader) ->
-  content.stop(true).fadeTo(500, 0.2)
-  loader.show()
-  loader.stop(true).fadeTo(500, 1)
-
-HTMLElement.prototype.smart_listing.onLoaded = (content, loader) ->
-  content.stop(true).fadeTo(500, 1)
-  loader.stop(true).fadeTo 500, 0, () =>
-    loader.hide()
-
-HTMLElement.prototype.smart_listing_controls = () ->
-  reload = (controls) ->
-    container = $("##{controls.data(SmartListing.config.data_attribute("main"))}")
-    smart_listing = container.smart_listing()
-
-    # serialize form and merge it with smart listing params
-    prms = {}
-    $.each controls.serializeArray(), (i, field) ->
-      if field.name.endsWith("[]")
-        field_name = field.name.slice(0, field.name.length - 2)
-        if Array.isArray(prms[field_name])
-          prms[field_name].push field.value
-        else
-          prms[field_name] = [field.value]
-      else
-        prms[field.name] = field.value
-
-    prms = $.extend(smart_listing.params(), prms)
-    smart_listing.params(prms)
-
-    smart_listing.fadeLoading()
-    smart_listing.reload()
-
-  $(this).each () ->
-    # avoid double initialization
-    return if $(this).data(SmartListing.config.data_attribute("controls_initialized"))
-    $(this).data(SmartListing.config.data_attribute("controls_initialized"), true)
-
-    controls = $(this)
-    smart_listing = $("##{controls.data(SmartListing.config.data_attribute("main"))}")
-    reset = controls.find(SmartListing.config.class_name("controls_reset"))
-
-    controls.submit ->
-      # setup smart listing params, reload and don"t actually submit controls form
-      reload(controls)
-      false
-
-    controls.find("input, select").change () ->
-      unless $(this).data(SmartListing.config.data_attribute("observed")) # do not submit controls form when changed field is observed (observing submits form by itself)
-        reload(controls)
-
-    HTMLElement.prototype.smart_listing_controls.filter(controls.find(SmartListing.config.class_name("filtering")))
-
-HTMLElement.prototype.smart_listing_controls.filter = (filter) ->
-  form = filter.closest("form")
-  button = form.find(SmartListing.config.selector("filtering_button"))
-  icon = form.find(SmartListing.config.selector("filtering_icon"))
-  field = form.find(SmartListing.config.selector("filtering_input"))
-
-  HTMLElement.prototype.smart_listing.observeField(field,
-    onFilled: ->
-      icon.removeClass(SmartListing.config.class("filtering_search"))
-      icon.addClass(SmartListing.config.class("filtering_cancel"))
-      button.removeClass(SmartListing.config.class("filtering_disabled"))
-    onEmpty: ->
-      icon.addClass(SmartListing.config.class("filtering_search"))
-      icon.removeClass(SmartListing.config.class("filtering_cancel"))
-      button.addClass(SmartListing.config.class("filtering_disabled"))
-    onChange: ->
-      form.submit()
-  )
-
-  button.click ->
-    if field.val().length > 0
-      field.val("")
-      field.trigger("keydown")
-    return false
-
-ready = ->
-  $(SmartListing.config.class_name("main")).smart_listing()
-  $(SmartListing.config.class_name("controls")).smart_listing_controls()
-
-$(document).ready ready
-$(document).on "page:load turbolinks:load", ready

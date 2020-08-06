@@ -1,0 +1,19 @@
+{
+  "global_options": {
+    "per_page": 10
+  },
+  "constants": {
+    "data_attributes": {
+      "href": ""
+    },
+    "classes": {
+      "main": "smart-listing"
+    },
+    "selectors": {
+    },
+    "element_templates": {
+    },
+    "bootstrap_commands": {
+    }
+  }
+}
