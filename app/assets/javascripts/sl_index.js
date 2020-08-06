@@ -12,7 +12,9 @@ if (!String.prototype.endsWith) {
 }
 
 // Useful when SmartListing target url is different than current one
-Rails.href = element => element.attr("href") || element.data("<%= SmartListing.config.data_attributes(:href) %>") || window.location.pathname;
+Rails.href = function(element) {
+    return element.getAttribute("href") || element.dataset("<%= SmartListing.config.data_attributes(:href) %>") || window.location.pathname;
+}
 
 const ready = function() {
     let elem = document.getElementsByClassName(SmartListing.config.class_name("main"))[0];
