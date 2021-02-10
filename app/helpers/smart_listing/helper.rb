@@ -189,7 +189,8 @@ module SmartListing
     end
 
     def smart_listing_config_profile
-      defined?(super) ? super : :default
+      # defined?(super) ? super : :default
+      :default
     end
 
     def smart_listing_config
