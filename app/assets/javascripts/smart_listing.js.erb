@@ -1,0 +1,100 @@
+// SmartListing class definition
+class SmartListing {
+  static config = <%= SmartListing.config.dump_json %>;
+
+  constructor(element) {
+    this.element = element;
+    this.name = element.id;
+    this.loading = element.querySelector(SmartListing.config.class_name("loading"));
+    this.content = element.querySelector(SmartListing.config.class_name("content"));
+    this.status = document.querySelector(`${SmartListing.config.class_name("status")} [data-${SmartListing.config.data_attribute("main")}='${this.name}']`);
+    this.confirmed = null;
+    this.popovers = {};
+
+    this.setupEventListeners();
+  }
+
+  setupEventListeners() {
+    this.element.addEventListener("click", this.handleClick.bind(this));
+    this.element.addEventListener("change", this.handleChange.bind(this));
+  }
+
+  handleClick(event) {
+    if (event.target.matches(SmartListing.config.selector("edit_cancel"))) {
+      this.handleEditCancel(event);
+    } else if (event.target.matches(`${SmartListing.config.class_name("item_actions")} a[data-${SmartListing.config.data_attribute("confirmation")}]`)) {
+      this.handleConfirmation(event);
+    } else if (event.target.matches(`${SmartListing.config.class_name("item_actions")} a[data-${SmartListing.config.data_attribute("popover")}]`)) {
+      this.handlePopover(event);
+    } else if (event.target.matches(`input[type=text]${SmartListing.config.class_name("autoselect")}`)) {
+      event.target.select();
+    }
+  }
+
+  handleChange(event) {
+    if (event.target.matches(SmartListing.config.class_name("callback"))) {
+      this.handleCallback(event.target);
+    }
+  }
+
+  handleEditCancel(event) {
+    const editable = event.target.closest(SmartListing.config.class_name("editable"));
+    if (editable) {
+      this.cancelEdit(editable);
+    } else {
+      this.element.querySelector(SmartListing.config.class_name("new_item_placeholder")).classList.add(SmartListing.config.class("hidden"));
+      this.element.querySelector(SmartListing.config.class_name("new_item_action")).classList.remove(SmartListing.config.class("hidden"));
+    }
+
+    this.setAutoshow(false);
+    event.preventDefault();
+  }
+
+  handleConfirmation(event) {
+    const confirmMessage = event.target.dataset[SmartListing.config.data_attribute("confirmation")];
+    if (!confirm(confirmMessage)) {
+      event.preventDefault();
+    }
+  }
+
+  handlePopover(event) {
+    const name = event.target.dataset[SmartListing.config.data_attribute("popover")];
+    if (typeof this.popovers[name] === "function") {
+      this.popovers[name](event.target);
+      event.preventDefault();
+    }
+  }
+
+  handleCallback(checkbox) {
+    const id = checkbox.closest(SmartListing.config.selector("row")).dataset[SmartListing.config.data_attribute("id")];
+    const data = { [checkbox.value]: checkbox.checked };
+    
+    fetch(this.element.dataset[SmartListing.config.data_attribute("callback_href")], {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify(data)
+    });
+  }
+
+  cancelEdit(editable) {
+    const backupAttr = SmartListing.config.data_attribute("inline_edit_backup");
+    if (editable.dataset[backupAttr]) {
+      editable.innerHTML = editable.dataset[backupAttr];
+      editable.classList.remove(SmartListing.config.class("inline_editing"));
+      delete editable.dataset[backupAttr];
+    }
+  }
+
+  setAutoshow(value) {
+    this.element.dataset[SmartListing.config.data_attribute("autoshow")] = value;
+  }
+
+  static initialize() {
+    document.querySelectorAll(SmartListing.config.class_name("main")).forEach(el => new SmartListing(el));
+  }
+}
+
+export default SmartListing;
