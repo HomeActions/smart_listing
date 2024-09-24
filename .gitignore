@@ -32,3 +32,4 @@ spec/dummy/tmp/
 tags
 
 .byebug_history
+.idea
