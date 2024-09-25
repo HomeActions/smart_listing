@@ -151,13 +151,14 @@ $.rails.href = element => element.attr("href") || element.data("<%= SmartListing
         const id = checkbox.closest(SmartListing.config.selector("row")).data(SmartListing.config.data_attribute("id"));
         const data = {};
         data[checkbox.val()] = checkbox.is(":checked");
-        return $.ajax({
-          beforeSend(xhr, settings) {
-            return xhr.setRequestHeader("accept", "*/*;q=0.5, " + settings.accepts.script);
+        return fetch(
+          this.container.data(SmartListing.config.data_attribute("callback_href")),
+          {
+          method: "POST",
+          headers: {
+            "Accept": "*/*;q=0.5, " + "application/javascript"
           },
-          url: this.container.data(SmartListing.config.data_attribute("callback_href")),
-          type: "POST",
-          data,
+          body: JSON.stringify(data)
         });
       });
     }

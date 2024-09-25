@@ -1,4 +1,4 @@
-require 'smart_listing/config'
+require "smart_listing/config"
 require "smart_listing/engine"
 require "kaminari"
 

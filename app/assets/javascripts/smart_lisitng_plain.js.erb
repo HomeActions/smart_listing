@@ -372,7 +372,7 @@ rails.href = element => element.getAttribute("href") || element.dataset[SmartLis
   return Cls;
 })();
 
-SmartListing = function() {
+smartListing = function() {
   const map = Array.from(this).map(element => {
     if (!element.dataset[SmartListing.config.dataAttribute("main")]) {
       element.dataset[SmartListing.config.dataAttribute("main")] = new SmartListing(element);
@@ -386,7 +386,7 @@ SmartListing = function() {
   }
 };
 
-SmartListing.observeField = function(field, opts = {}) {
+smartListing.observeField = function(field, opts = {}) {
   let keyTimeout = null;
   let lastValue = null;
   let options = {
@@ -422,13 +422,13 @@ SmartListing.observeField = function(field, opts = {}) {
   });
 };
 
-SmartListing.showPopover = function(elem, body) {
+smartListing.showPopover = function(elem, body) {
   elem.popover(SmartListing.config.bootstrapCommands("popoverDestroy"));
   elem.popover({content: body, html: true, trigger: "manual"});
   return elem.popover("show");
 };
 
-SmartListing.showConfirmation = function(confirmationElem, msg, confirmCallback) {
+smartListing.showConfirmation = function(confirmationElem, msg, confirmCallback) {
   const buildPopover = function(confirmationElem, msg) {
     const deletionPopover = document.createElement("div");
     deletionPopover.classList.add("confirmationBox");
@@ -458,7 +458,7 @@ SmartListing.showConfirmation = function(confirmationElem, msg, confirmCallback)
   return SmartListing.showPopover(confirmationElem, buildPopover(confirmationElem, msg));
 };
 
-SmartListing.confirm = function(elem, msg) {
+smartListing.confirm = function(elem, msg) {
   if (!elem.dataset.confirmed) {
     SmartListing.showConfirmation(elem, msg, confirmElem => {
       confirmElem.dataset.confirmed = true;
@@ -470,7 +470,7 @@ SmartListing.confirm = function(elem, msg) {
   }
 };
 
-SmartListing.onLoading = function(content, loader) {
+smartListing.onLoading = function(content, loader) {
   content.style.transition = "opacity 0.5s";
   content.style.opacity = 0.2;
   loader.style.display = "block";
@@ -478,7 +478,7 @@ SmartListing.onLoading = function(content, loader) {
   loader.style.opacity = 1;
 };
 
-SmartListing.onLoaded = function(content, loader) {
+smartListing.onLoaded = function(content, loader) {
   content.style.transition = "opacity 0.5s";
   content.style.opacity = 1;
   loader.style.transition = "opacity 0.5s";
@@ -491,7 +491,7 @@ SmartListing.onLoaded = function(content, loader) {
 function smart_listing_controls(element) {
   const reload = function(controls) {
     const container = document.getElementById(controls.dataset[SmartListing.config.data_attribute("main")]);
-    const smart_listing = container.smart_listing();
+    const smart_listing = container.smartListing();
 
     // serialize form and merge it with smart listing params
     let prms = {};
@@ -568,3 +568,11 @@ function smart_listing_controls_filter(filter) {
     }
   });
 }
+
+// Assign the function to an HTML element
+document.addEventListener('DOMContentLoaded', () => {
+  const mainElements = document.querySelectorAll('.smart-listing'); // Replace with your actual class or selector
+  mainElements.forEach(element => {
+    element.smart_listing = smartListing;
+  });
+});
