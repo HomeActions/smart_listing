@@ -1,2 +1,8 @@
-var smart_listing = $('#<%= name %>').smart_listing();
-smart_listing.update(<%= id.to_json.html_safe %>, <%= valid.nil? ? object.valid? : valid %>, "<%= escape_javascript(render(:partial => part, :locals => {object_key => object})) %>");
+var smartListing = document.getElementById('<%= name %>');
+smartListing.dispatchEvent(new CustomEvent('smart-listing:update', {
+  detail: {
+    id: <%= id.to_json.html_safe %>,
+    valid: <%= valid.nil? ? object.valid? : valid %>,
+    content: "<%= escape_javascript(render(:partial => part, :locals => {object_key => object})) %>"
+  }
+}));

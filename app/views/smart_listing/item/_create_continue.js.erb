@@ -1,6 +1,16 @@
-var smart_listing = $('#<%= name %>').smart_listing();
-smart_listing.setAutoshow(true);
-smart_listing.create(<%= (id || 0).to_json.html_safe %>, <%= object.persisted? %>, "<%= escape_javascript(render(:partial => part, :locals => {object_key => object})) %>");
+var smartListing = document.getElementById('<%= name %>');
+smartListing.dataset.autoshow = 'true';
+smartListing.dispatchEvent(new CustomEvent('smart-listing:create', {
+  detail: {
+    id: <%= (id || 0).to_json.html_safe %>,
+    persisted: <%= object.persisted? %>,
+    content: "<%= escape_javascript(render(:partial => part, :locals => {object_key => object})) %>"
+  }
+}));
 <% if object.persisted? %>
-  smart_listing.new_item("<%= escape_javascript(render(:partial => new.last, :locals => {object_key => new.first})) %>");
+  smartListing.dispatchEvent(new CustomEvent('smart-listing:new-item', {
+    detail: {
+      content: "<%= escape_javascript(render(:partial => new.last, :locals => {object_key => new.first})) %>"
+    }
+  }));
 <% end %>

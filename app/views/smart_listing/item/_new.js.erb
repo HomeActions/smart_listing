@@ -1,2 +1,6 @@
-var smart_listing = $('#<%= name %>').smart_listing();
-smart_listing.new_item("<%= escape_javascript(render(:partial => part, :locals => {object_key => object})) %>");
+var smartListing = document.getElementById('<%= name %>');
+smartListing.dispatchEvent(new CustomEvent('smart-listing:new-item', {
+  detail: {
+    content: "<%= escape_javascript(render(:partial => part, :locals => {object_key => object})) %>"
+  }
+}));

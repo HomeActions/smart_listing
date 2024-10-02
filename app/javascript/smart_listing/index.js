@@ -130,3 +130,40 @@ document.addEventListener("turbo:before-stream-render", (event) => {
     new SmartListing(targetElement);
   }
 });
+
+// Handle custom SmartListing events
+document.addEventListener("smart-listing:create", (event) => {
+  const smartListing = event.target;
+  const { id, persisted, content } = event.detail;
+  smartListing.create(id, persisted, content);
+});
+
+document.addEventListener("smart-listing:new-item", (event) => {
+  const smartListing = event.target;
+  const { content } = event.detail;
+  smartListing.newItem(content);
+});
+
+document.addEventListener("smart-listing:destroy", (event) => {
+  const smartListing = event.target;
+  const { id, destroyed } = event.detail;
+  smartListing.destroy(id, destroyed);
+});
+
+document.addEventListener("smart-listing:edit", (event) => {
+  const smartListing = event.target;
+  const { id, content } = event.detail;
+  smartListing.edit(id, content);
+});
+
+document.addEventListener("smart-listing:remove", (event) => {
+  const smartListing = event.target;
+  const { id } = event.detail;
+  smartListing.remove(id);
+});
+
+document.addEventListener("smart-listing:update", (event) => {
+  const smartListing = event.target;
+  const { id, valid, content } = event.detail;
+  smartListing.update(id, valid, content);
+});

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Full compatibility with Turbo in Rails 7
 - Support for Rails 7
 - Compatibility with Turbo (replacing Turbolinks)
+- Custom events for SmartListing actions (create, new-item, destroy, edit, remove, update)
 - New JavaScript module for import in Rails 7 applications
 
 ### Changed
@@ -24,6 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `smart_listing.gemspec` to reflect new Rails 7 compatibility
 - Removed jQuery dependency, now using vanilla JavaScript
 - Updated installation and usage instructions in README.md for Rails 7 and Turbo compatibility
+- Refactored Kaminari view templates to use data attributes instead of jQuery-specific options
+- Updated SmartListing item view templates to use custom events instead of jQuery methods
+- Modified app/javascript/smart_listing/index.js to handle new custom events and Turbo compatibility
 
 ### Removed
 - Deleted `app/assets/javascripts/smart_listing.coffee.erb`

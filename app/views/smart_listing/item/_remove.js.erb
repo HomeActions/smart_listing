@@ -1,2 +1,6 @@
-var smart_listing = $('#<%= name %>').smart_listing();
-smart_listing.remove(<%= id.to_json.html_safe %>);
+var smartListing = document.getElementById('<%= name %>');
+smartListing.dispatchEvent(new CustomEvent('smart-listing:remove', {
+  detail: {
+    id: <%= id.to_json.html_safe %>
+  }
+}));

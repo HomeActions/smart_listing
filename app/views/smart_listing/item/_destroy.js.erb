@@ -1,2 +1,7 @@
-var smart_listing = $('#<%= name.to_s %>').smart_listing();
-smart_listing.destroy(<%= id.to_json.html_safe %>, <%= object.destroyed? %>);
+var smartListing = document.getElementById('<%= name.to_s %>');
+smartListing.dispatchEvent(new CustomEvent('smart-listing:destroy', {
+  detail: {
+    id: <%= id.to_json.html_safe %>,
+    destroyed: <%= object.destroyed? %>
+  }
+}));
