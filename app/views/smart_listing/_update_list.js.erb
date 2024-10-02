@@ -1,2 +1,15 @@
-var smart_listing = $('#<%= name %>').smart_listing();
-smart_listing.update_list("<%= escape_javascript(render(:partial => part, :locals => {:smart_listing => smart_listing}.merge(locals))) %>", <%= smart_listing_data.to_json.html_safe %>);
+// Get the smart listing element
+var smartListing = document.getElementById('<%= name %>');
+
+// Update the list content
+smartListing.innerHTML = '<%= escape_javascript(render(:partial => part, :locals => {:smart_listing => smart_listing}.merge(locals))) %>';
+
+// Update data attributes
+var smartListingData = <%= smart_listing_data.to_json.html_safe %>;
+Object.keys(smartListingData).forEach(function(key) {
+  smartListing.dataset[key] = smartListingData[key];
+});
+
+// Trigger a custom event to notify that the smart listing has been updated
+var event = new CustomEvent('smart-listing:updated', { detail: { name: '<%= name %>' } });
+document.dispatchEvent(event);

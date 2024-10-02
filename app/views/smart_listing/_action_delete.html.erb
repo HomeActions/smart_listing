@@ -5,8 +5,8 @@
     action_if:          false if action is disabled
     url:                destroy url
     icon:               icon css classes
-    confirmation:       confrimation text
+    confirmation:       confirmation text
     title
 -%>
 
-<%= link_to_if(action_if, content_tag(:i, "", :class => icon), url, :remote => true, :class => "destroy", :method => :delete, :title => title || t("smart_listing.actions.destroy"), :data => {:confirmation => confirmation || t("smart_listing.msgs.destroy_confirmation")} ) %>
+<%= link_to_if(action_if, content_tag(:i, "", class: icon), url, class: "destroy", title: title || t("smart_listing.actions.destroy"), data: { remote: true, method: :delete, confirm: confirmation || t("smart_listing.msgs.destroy_confirmation") }) %>

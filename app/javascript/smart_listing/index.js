@@ -19,12 +19,106 @@ document.addEventListener("turbo:render", () => {
   initSmartListing();
 });
 
-// Handle Turbo form submissions
-document.addEventListener("turbo:submit-start", (event) => {
+// Handle remote links
+document.addEventListener("click", (event) => {
+  const link = event.target.closest("a[data-remote='true']");
+  if (link) {
+    event.preventDefault();
+    fetch(link.href, {
+      method: "GET",
+      headers: {
+        "Accept": "text/javascript",
+        "X-Requested-With": "XMLHttpRequest"
+      }
+    })
+    .then(response => response.text())
+    .then(html => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+      const scripts = doc.querySelectorAll("script");
+      scripts.forEach(script => {
+        eval(script.textContent);
+      });
+    });
+  }
+});
+
+// Handle sorting
+document.addEventListener("click", (event) => {
+  const sortLink = event.target.closest("a[data-attr]");
+  if (sortLink) {
+    event.preventDefault();
+    const url = new URL(sortLink.href);
+    url.searchParams.set("sort", sortLink.dataset.attr);
+    url.searchParams.set("order", sortLink.dataset.order === "asc" ? "desc" : "asc");
+    fetch(url, {
+      method: "GET",
+      headers: {
+        "Accept": "text/javascript",
+        "X-Requested-With": "XMLHttpRequest"
+      }
+    })
+    .then(response => response.text())
+    .then(html => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+      const scripts = doc.querySelectorAll("script");
+      scripts.forEach(script => {
+        eval(script.textContent);
+      });
+    });
+  }
+});
+
+// Handle form submissions
+document.addEventListener("submit", (event) => {
   const form = event.target;
   if (form.dataset.remote === "true") {
     event.preventDefault();
-    // Handle the form submission manually if needed
+    const formData = new FormData(form);
+    fetch(form.action, {
+      method: form.method,
+      body: formData,
+      headers: {
+        "Accept": "text/javascript",
+        "X-Requested-With": "XMLHttpRequest"
+      }
+    })
+    .then(response => response.text())
+    .then(html => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+      const scripts = doc.querySelectorAll("script");
+      scripts.forEach(script => {
+        eval(script.textContent);
+      });
+    });
+  }
+});
+
+// Handle delete actions with confirmation
+document.addEventListener("click", (event) => {
+  const deleteLink = event.target.closest("a.destroy[data-method='delete']");
+  if (deleteLink) {
+    event.preventDefault();
+    if (confirm(deleteLink.dataset.confirm || "Are you sure?")) {
+      fetch(deleteLink.href, {
+        method: "DELETE",
+        headers: {
+          "Accept": "text/javascript",
+          "X-Requested-With": "XMLHttpRequest"
+        }
+      })
+      .then(response => response.text())
+      .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const scripts = doc.querySelectorAll("script");
+        scripts.forEach(script => {
+          eval(script.textContent);
+        });
+      });
+    }
   }
 });
 

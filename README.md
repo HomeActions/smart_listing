@@ -2,6 +2,11 @@
 
 SmartListing helps create AJAX-enabled lists of ActiveRecord collections or arrays with pagination, filtering, sorting and in-place editing.
 
+## What's New
+
+- **Vanilla JavaScript**: SmartListing now uses vanilla JavaScript instead of jQuery, reducing dependencies and improving performance.
+- **Turbo Compatibility**: Full compatibility with Turbo in Rails 7 for smooth, modern web interactions.
+
 ## Installation
 
 Add to your Gemfile:
@@ -120,9 +125,17 @@ For AJAX functionality with Turbo, create a Turbo Stream template (e.g., `index.
 
 For more advanced features like sorting, filtering, and in-place editing, refer to the detailed documentation in the sections below.
 
-## Turbo Compatibility
+## Vanilla JavaScript and Turbo Compatibility
 
-SmartListing is now compatible with Turbo in Rails 7. The JavaScript has been updated to work with Turbo events instead of Turbolinks events. Make sure your Turbo Stream responses update the correct elements for smooth operation.
+SmartListing now uses vanilla JavaScript instead of jQuery, making it lighter and more performant. It's fully compatible with Turbo in Rails 7. The JavaScript has been updated to work with Turbo events instead of Turbolinks events. 
+
+Key points:
+- No jQuery dependency
+- Uses modern JavaScript features
+- Works seamlessly with Turbo
+- Improved performance
+
+Make sure your Turbo Stream responses update the correct elements for smooth operation.
 
 ## Not enough?
 

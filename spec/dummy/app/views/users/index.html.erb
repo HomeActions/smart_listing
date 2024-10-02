@@ -1,1 +1,44 @@
-<%= smart_listing_render %>
+<h1>Users</h1>
+
+<%= smart_listing_controls_for :users do %>
+  <div class="filter form-search">
+    <%= text_field_tag :filter, '', class: "search-query", placeholder: "Search..." %>
+  </div>
+<% end %>
+
+<%= smart_listing_render :users do %>
+  <% unless smart_listing.empty? %>
+    <table class="table">
+      <thead>
+        <tr>
+          <th><%= smart_listing.sortable "ID", "id" %></th>
+          <th><%= smart_listing.sortable "Name", "name" %></th>
+          <th><%= smart_listing.sortable "Email", "email" %></th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% smart_listing.collection.each do |user| %>
+          <tr>
+            <td><%= user.id %></td>
+            <td><%= user.name %></td>
+            <td><%= user.email %></td>
+            <td>
+              <%= smart_listing_item_actions [
+                {name: :show, url: user_path(user)},
+                {name: :edit, url: edit_user_path(user)},
+                {name: :destroy, url: user_path(user), confirmation: "Are you sure you want to delete this user?"}
+              ] %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <%= smart_listing.paginate %>
+    <%= smart_listing.pagination_per_page_links %>
+  <% else %>
+    <p class="warning">No records!</p>
+  <% end %>
+<% end %>
+
+<%= link_to "New User", new_user_path, class: "btn btn-primary", data: { remote: true } %>

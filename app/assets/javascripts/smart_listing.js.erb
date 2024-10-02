@@ -17,6 +17,7 @@ class SmartListing {
   setupEventListeners() {
     this.element.addEventListener("click", this.handleClick.bind(this));
     this.element.addEventListener("change", this.handleChange.bind(this));
+    this.element.addEventListener("submit", this.handleSubmit.bind(this));
   }
 
   handleClick(event) {
@@ -28,12 +29,22 @@ class SmartListing {
       this.handlePopover(event);
     } else if (event.target.matches(`input[type=text]${SmartListing.config.class_name("autoselect")}`)) {
       event.target.select();
+    } else if (event.target.matches("a[data-remote='true']")) {
+      this.handleRemoteLink(event);
+    } else if (event.target.matches("a[data-attr]")) {
+      this.handleSorting(event);
     }
   }
 
   handleChange(event) {
     if (event.target.matches(SmartListing.config.class_name("callback"))) {
       this.handleCallback(event.target);
+    }
+  }
+
+  handleSubmit(event) {
+    if (event.target.matches("form[data-remote='true']")) {
+      this.handleRemoteForm(event);
     }
   }
 
@@ -54,6 +65,8 @@ class SmartListing {
     const confirmMessage = event.target.dataset[SmartListing.config.data_attribute("confirmation")];
     if (!confirm(confirmMessage)) {
       event.preventDefault();
+    } else if (event.target.dataset.method === 'delete') {
+      this.handleDelete(event);
     }
   }
 
@@ -69,14 +82,62 @@ class SmartListing {
     const id = checkbox.closest(SmartListing.config.selector("row")).dataset[SmartListing.config.data_attribute("id")];
     const data = { [checkbox.value]: checkbox.checked };
     
-    fetch(this.element.dataset[SmartListing.config.data_attribute("callback_href")], {
-      method: 'POST',
+    this.sendRequest(this.element.dataset[SmartListing.config.data_attribute("callback_href")], 'POST', data);
+  }
+
+  handleRemoteLink(event) {
+    event.preventDefault();
+    this.sendRequest(event.target.href, 'GET');
+  }
+
+  handleSorting(event) {
+    event.preventDefault();
+    const url = new URL(event.target.href);
+    url.searchParams.set("sort", event.target.dataset.attr);
+    url.searchParams.set("order", event.target.dataset.order === "asc" ? "desc" : "asc");
+    this.sendRequest(url, 'GET');
+  }
+
+  handleRemoteForm(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    this.sendRequest(form.action, form.method, formData);
+  }
+
+  handleDelete(event) {
+    event.preventDefault();
+    this.sendRequest(event.target.href, 'DELETE');
+  }
+
+  sendRequest(url, method, data = null) {
+    const options = {
+      method: method,
       headers: {
-        'Content-Type': 'application/json',
+        'Accept': 'text/javascript',
         'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: JSON.stringify(data)
-    });
+      }
+    };
+
+    if (data) {
+      if (data instanceof FormData) {
+        options.body = data;
+      } else {
+        options.headers['Content-Type'] = 'application/json';
+        options.body = JSON.stringify(data);
+      }
+    }
+
+    fetch(url, options)
+      .then(response => response.text())
+      .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const scripts = doc.querySelectorAll("script");
+        scripts.forEach(script => {
+          eval(script.textContent);
+        });
+      });
   }
 
   cancelEdit(editable) {
