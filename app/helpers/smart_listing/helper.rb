@@ -206,7 +206,7 @@ module SmartListing
       else
         content_tag(:div, class: smart_listing_config.classes(:main), id: name, data: data) do
           concat(content_tag(:div, "", class: smart_listing_config.classes(:loading)))
-          concat(content_tag(:turbo-frame, id: name) do
+          concat(content_tag(:turbo_frame, id: name) do
             concat(content_tag(:div, class: smart_listing_config.classes(:content)) do
               concat(capture(builder, &block))
             end)
